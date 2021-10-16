@@ -3,6 +3,7 @@ package main
 import (
 
 	"fmt"
+	"github.com/brettman/go-rest-api-course/internal/database"
 	transportHTTP "github.com/brettman/go-rest-api-course/internal/transport/http"
 	"net/http"
 )
@@ -13,6 +14,13 @@ type App struct{}
 // Run - sets up our application
 func (app *App) Run() error{
 	fmt.Println("setting up our app")
+
+	var err error
+	_, err = database.NewDatabase()
+	if err != nil {
+		return err
+	}
+
 	handler := transportHTTP.NewHandler()
 	handler.SetupRoutes()
 	if err := http.ListenAndServe(":8080", handler.Router); err != nil {

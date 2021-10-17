@@ -20,9 +20,11 @@ func NewDatabase() (*gorm.DB, error){
 	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", dbHost, dbPort, dbUserName, dbTable, dbPassword )
 	db, err := gorm.Open("postgres", connectionString)
 	if err !=nil{
+		fmt.Printf("Error opening new database connection: %w\r\n", connectionString)
 		return db, err
 	}
 	if err:= db.DB().Ping(); err !=nil{
+		fmt.Println("Error pinging new database connection")
 		return db, err
 	}
 

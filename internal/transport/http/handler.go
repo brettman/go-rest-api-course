@@ -25,11 +25,13 @@ func NewHandler(service *comment.Service) *Handler{
 func (h *Handler) SetupRoutes() {
 	fmt.Println("Setting up routes.")
 	h.Router = mux.NewRouter()
+
+	h.Router.HandleFunc("/api/comment", h.GetAllComments).Methods("GET")
+	h.Router.HandleFunc("/api/comment", h.PostComment).Methods("POST")
+
 	h.Router.HandleFunc("/api/comment/{id}", h.GetComment).Methods("GET")
-	h.Router.HandleFunc("/api/comment/", h.GetAllComments).Methods("GET")
-	h.Router.HandleFunc("/api/comment/", h.PostComment).Methods("POST")
-	h.Router.HandleFunc("/api/comment/{id}", h.DeleteComment).Methods("DELETE")
 	h.Router.HandleFunc("/api/comment/{id}", h.UpdateComment).Methods("PUT")
+	h.Router.HandleFunc("/api/comment/{id}", h.DeleteComment).Methods("DELETE")
 
 	h.Router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "I am alive")
@@ -76,7 +78,15 @@ func(h *Handler) PostComment(w http.ResponseWriter, r *http.Request) {
 
 // UpdateComments - update comment by id with new comment
 func(h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
-	comment, err := h.Service.UpdateComment(1, comment.Comment{
+	vars := mux.Vars(r)
+	id := vars["id"]
+	i, err := strconv.ParseUint(id, 10,64)
+
+	if err !=nil{
+		fmt.Fprintf(w, "unable to parse UINT from ID")
+	}
+
+	comment, err := h.Service.UpdateComment(uint(i), comment.Comment{
 		Slug: "/new",
 	})
 
@@ -102,4 +112,6 @@ func(h *Handler) DeleteComment(w  http.ResponseWriter, r *http.Request) {
 	if err !=nil{
 		fmt.Fprintf(w, "Failed to delete comment with id %s", id)
 	}
+
+	fmt.Fprintf(w, "Sucessfully deleted comment")
 }

@@ -70,7 +70,7 @@ func(s *Service) UpdateComment (ID uint, newComment Comment) (Comment, error){
 	if result := s.DB.Model(&comment).Updates(newComment); result.Error != nil{
 		return Comment{}, result.Error
 	}
-	return Comment{}, nil
+	return comment, nil
 }
 
 // DeleteComment - Deletes comment in db by ID

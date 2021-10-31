@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/brettman/go-rest-api-course/internal/comment"
 	"github.com/gorilla/mux"
@@ -12,6 +13,11 @@ import (
 type Handler struct {
 	Router *mux.Router
 	Service *comment.Service
+}
+
+//Response - object to store responses
+type Response struct {
+	Message string
 }
 
 // NewHandler - returns a pointer to a Handler
@@ -34,7 +40,11 @@ func (h *Handler) SetupRoutes() {
 	h.Router.HandleFunc("/api/comment/{id}", h.DeleteComment).Methods("DELETE")
 
 	h.Router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "I am alive")
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(Response{Message: "I am alive"}); err != nil {
+			panic(err)
+		}
 	})
 }
 

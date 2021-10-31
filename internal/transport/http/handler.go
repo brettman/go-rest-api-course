@@ -18,6 +18,7 @@ type Handler struct {
 //Response - object to store responses
 type Response struct {
 	Message string
+	Error string
 }
 
 // NewHandler - returns a pointer to a Handler
@@ -58,11 +59,13 @@ func(h *Handler) GetComment(w http.ResponseWriter, r *http.Request){
 	i, err := strconv.ParseUint(id, 10,64)
 
 	if err !=nil{
-		fmt.Fprintf(w, "unable to parse UINT from ID")
+		sendErrorResponse(w, "unable to parse UINT from ID", err)
+		return
 	}
 	comment, err := h.Service.GetComment(uint(i))
 	if err != nil {
-		fmt.Fprintf(w, "Error retriving comment by id")
+		sendErrorResponse(w, "Error retriving comment by id", err)
+		return
 	}
 
 	if err = json.NewEncoder(w).Encode(comment); err !=nil{
@@ -77,7 +80,8 @@ func(h *Handler) GetAllComments(w http.ResponseWriter, r *http.Request){
 
 	comments, err := h.Service.GetAllComments()
 	if err != nil{
-		fmt.Fprintf(w, "Error retrieving all comments")
+		sendErrorResponse(w, "Error retrieving all comments", err)
+		return
 	}
 	if err = json.NewEncoder(w).Encode(comments); err !=nil{
 		panic(err)
@@ -91,11 +95,13 @@ func(h *Handler) PostComment(w http.ResponseWriter, r *http.Request) {
 
 	var comment comment.Comment
 	if err:= json.NewDecoder(r.Body).Decode(&comment); err != nil{
-		fmt.Fprintf(w, "Failed to decode request body")
+		sendErrorResponse(w, "Failed to decode request body", err)
+		return
 	}
 	comment, err := h.Service.PostComment(comment)
 	if err != nil{
-		fmt.Fprintf(w, "Failed to create comment")
+		sendErrorResponse(w, "Failed to create comment", err)
+		return
 	}
 
 	if err = json.NewEncoder(w).Encode(comment); err !=nil{
@@ -113,18 +119,21 @@ func(h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	i, err := strconv.ParseUint(id, 10,64)
 
 	if err !=nil{
-		fmt.Fprintf(w, "unable to parse UINT from ID")
+		sendErrorResponse(w, "unable to parse UINT from ID", err)
+		return
 	}
 
 	var comment comment.Comment
 	if err:= json.NewDecoder(r.Body).Decode(&comment); err != nil{
-		fmt.Fprintf(w, "Failed to decode request body")
+		sendErrorResponse(w, "Failed to decode request body", err)
+		return
 	}
 
 	comment, err = h.Service.UpdateComment(uint(i), comment)
 
 	if err != nil{
-		fmt.Fprintf(w, "Failed to update comment")
+		sendErrorResponse(w, "Failed to update comment", err)
+		return
 	}
 
 	if err = json.NewEncoder(w).Encode(comment); err !=nil{
@@ -142,15 +151,24 @@ func(h *Handler) DeleteComment(w  http.ResponseWriter, r *http.Request) {
 	i, err := strconv.ParseUint(id, 10,64)
 
 	if err !=nil{
-		fmt.Fprintf(w, "unable to parse UINT from ID")
+		sendErrorResponse(w, "unable to parse UINT from ID", err)
+		return
 	}
 
 	err = h.Service.DeleteComment(uint(i))
 	if err !=nil{
-		fmt.Fprintf(w, "Failed to delete comment with id %s", id)
+		sendErrorResponse(w, fmt.Sprintf("Failed to delete comment with id %s", id), err)
+		return
 	}
 
 	if err = json.NewEncoder(w).Encode(&Response{Message: "Successfully deleted comment."}); err !=nil{
+		panic(err)
+	}
+}
+
+func sendErrorResponse(w http.ResponseWriter, message string, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	if err := json.NewEncoder(w).Encode(Response{Message: message, Error: err.Error()}); err != nil{
 		panic(err)
 	}
 }

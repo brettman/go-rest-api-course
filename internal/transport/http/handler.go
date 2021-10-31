@@ -89,9 +89,11 @@ func(h *Handler) PostComment(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
-	comment, err := h.Service.PostComment(comment.Comment{
-		Slug: "/",
-	})
+	var comment comment.Comment
+	if err:= json.NewDecoder(r.Body).Decode(&comment); err != nil{
+		fmt.Fprintf(w, "Failed to decode request body")
+	}
+	comment, err := h.Service.PostComment(comment)
 	if err != nil{
 		fmt.Fprintf(w, "Failed to create comment")
 	}
@@ -114,9 +116,12 @@ func(h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "unable to parse UINT from ID")
 	}
 
-	comment, err := h.Service.UpdateComment(uint(i), comment.Comment{
-		Slug: "/new",
-	})
+	var comment comment.Comment
+	if err:= json.NewDecoder(r.Body).Decode(&comment); err != nil{
+		fmt.Fprintf(w, "Failed to decode request body")
+	}
+
+	comment, err = h.Service.UpdateComment(uint(i), comment)
 
 	if err != nil{
 		fmt.Fprintf(w, "Failed to update comment")

@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/brettman/go-rest-api-course/internal/comment"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -27,6 +28,7 @@ func NewHandler(service *comment.Service) *Handler{
 	}
 }
 
+// LoggingMiddleware - Log endpoint activity
 func LoggingMiddleware(next http.Handler) http.Handler{
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
 		log.WithFields(
@@ -37,6 +39,22 @@ func LoggingMiddleware(next http.Handler) http.Handler{
 		next.ServeHTTP(w, r)
 	})
 }
+
+// BasicAuth - - middlware function that will provide basic auth around specific endpoints
+func BasicAuth(original func(w http.ResponseWriter, r *http.Request)) func (w http.ResponseWriter, r *http.Request){
+	return func(w http.ResponseWriter, r *http.Request){
+		log.Info("basic auth endpoint hit")
+		user, pass, ok := r.BasicAuth()
+		if user == "admin" && pass == "password" && ok {
+			original(w,r)
+		}else{
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
+		}
+	}
+}
+
+
 // SetupRoutes - sets up all the routes for the app
 func (h *Handler) SetupRoutes() {
 	log.Info("Setting up routes.")
@@ -44,11 +62,11 @@ func (h *Handler) SetupRoutes() {
 	h.Router.Use(LoggingMiddleware)
 
 	h.Router.HandleFunc("/api/comment", h.GetAllComments).Methods("GET")
-	h.Router.HandleFunc("/api/comment", h.PostComment).Methods("POST")
+	h.Router.HandleFunc("/api/comment", BasicAuth(h.PostComment)).Methods("POST")
 
 	h.Router.HandleFunc("/api/comment/{id}", h.GetComment).Methods("GET")
-	h.Router.HandleFunc("/api/comment/{id}", h.UpdateComment).Methods("PUT")
-	h.Router.HandleFunc("/api/comment/{id}", h.DeleteComment).Methods("DELETE")
+	h.Router.HandleFunc("/api/comment/{id}", BasicAuth(h.UpdateComment)).Methods("PUT")
+	h.Router.HandleFunc("/api/comment/{id}", BasicAuth(h.DeleteComment)).Methods("DELETE")
 
 	h.Router.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		if err := sendOkResponse(w, Response{Message: "I am alive"}); err != nil {

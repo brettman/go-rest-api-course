@@ -13,3 +13,5 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+do_env.sh
+.idea/

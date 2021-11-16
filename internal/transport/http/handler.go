@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+	log "github.com/sirupsen/logrus"
 )
 
 // Handler - stores pointer to comment service
@@ -30,7 +31,7 @@ func NewHandler(service *comment.Service) *Handler{
 
 // SetupRoutes - sets up all the routes for the app
 func (h *Handler) SetupRoutes() {
-	fmt.Println("Setting up routes.")
+	log.Info("Setting up routes.")
 	h.Router = mux.NewRouter()
 
 	h.Router.HandleFunc("/api/comment", h.GetAllComments).Methods("GET")

@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comments-api
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      name: comments-api
+  template:
+    metadata:
+      labels:
+        name: comments-api
+    spec:
+      containers:
+        - name: application
+          image: "brettman/comments-api:latest"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_PORT
+              value: "25060"
+            - name: DB_HOST
+              value: "db-postgresql-fra1-13999-do-user-10037102-0.b.db.ondigitalocean.com"
+            - name: DB_PASSWORD
+              value: "h2xAFRadJfMF2tNm"
+            - name: DB_TABLE
+              value: "defaultdb"
+            - name: DB_USERNAME
+              value: "doadmin"

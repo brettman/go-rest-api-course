@@ -62,13 +62,11 @@ func JWTAuth(original func(w http.ResponseWriter, r * http.Request)) func (w htt
 	return func(w http.ResponseWriter, r *http.Request){
 		log.Info("jwt authentiactio hit")
 		authHeader := r.Header["Authorization"]
-		log.Info(fmt.Sprintf("authHeader is: %d length", len(authHeader)))
 
 		if authHeader == nil  {
 			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
 			return
 		}
-		log.Info("one....")
 		if len(authHeader) == 0  {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			sendErrorResponse(w, "not authorized", errors.New("not authorized"))
